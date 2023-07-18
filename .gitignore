@@ -14,3 +14,9 @@ yarn-error.log*
 
 # Temporary files
 /temp
+.idea/.gitignore
+.idea/awesome-ha-blueprints.iml
+.idea/modules.xml
+.idea/vcs.xml
+.idea/codeStyles/codeStyleConfig.xml
+.idea/inspectionProfiles/profiles_settings.xml
