@@ -92,7 +92,7 @@ blueprint:
     min_brightness:
       name: (Optional) Light minimum brightness
       description: The minimum brightness the light can be set with this automation.
-      default: 1
+      default: 2
       selector:
         number:
           min: 1
@@ -180,7 +180,7 @@ blueprint:
     smooth_power_off:
       name: (Optional) Smooth power off
       description: Allow a brightness down command (single or continuous) to turn off the light when at minimum brightness. Disabling this will prevent the light from being turned off by brightness down commands.
-      default: true
+      default: false
       selector:
         boolean:
 # Automation schema
