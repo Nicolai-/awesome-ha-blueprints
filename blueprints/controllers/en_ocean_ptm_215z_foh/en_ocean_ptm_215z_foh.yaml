@@ -1,0 +1,439 @@
+# Blueprint metadata
+blueprint:
+  name: Controller - EnOcean PTM 215Z (Friends Of Hue) (Nicolai-)
+  description: |
+    # Controller - EnOcean PTM 215Z (Friends Of Hue) (Nicolai-)
+
+    Controller automation for executing any kind of action triggered by the provided Philips 324131092621 Hue Dimmer switch.
+    Allows to optionally loop an action on a button long press.
+    Supports Zigbee2MQTT. Make sure that 'Elapsed' is enabled in the Zigbee2MQTT advanced settings.
+
+    Automations created with this blueprint can be connected with one or more [Hooks](https://epmatt.github.io/awesome-ha-blueprints/docs/blueprints/hooks) supported by this controller.
+    Hooks allow to easily create controller-based automations for interacting with media players, lights, covers and more.
+    See the list of [Hooks available for this controller](https://epmatt.github.io/awesome-ha-blueprints/docs/blueprints/controllers/philips_324131092621#available-hooks) for additional details.
+
+    📕 Full documentation regarding this blueprint is available [here](https://epmatt.github.io/awesome-ha-blueprints/docs/blueprints/controllers/philips_324131092621).
+
+    🚀 This blueprint is part of the **[Awesome HA Blueprints](https://epmatt.github.io/awesome-ha-blueprints) project**.
+
+    ℹ️ Version 2023.07.18
+  source_url: https://github.com/Nicolai-/awesome-ha-blueprints/blob/main/blueprints/controllers/en_ocean_ptm_215z_foh/en_ocean_ptm_215z_foh.yaml
+  domain: automation
+  input:
+    controller:
+      name: (Required) Zigbee2MQTT Controller Name
+      description: The name of the controller as defined in Zigbee2MQTT (e.g. Livingroom Switch)
+      default: ''
+    base_topic:
+      name: (Required) Zigbee2MQTT Base mqtt topic
+      description: The base topic as configured in Zigbee2MQTT
+      default: zigbee2mqtt
+    controller_entity:
+      name: (Required) Zigbee2MQTT Controller Entity
+      description: The action sensor of the controller to use for the automation.
+      default: ''
+      selector:
+        entity:
+          domain: sensor
+    helper_last_controller_event:
+      name: (Required) Helper - Last Controller Event
+      description: Input Text used to store the last event fired by the controller. You will need to manually create a text input entity for this, please read the blueprint Additional Notes for more info.
+      default: ''
+      selector:
+        entity:
+          domain: input_text
+    hold_delay:
+      name: Hold delay (Required for FOH)
+      description: |
+        EnOcean PTM 215Z does not support long press natively, so here we simulate long button presses.
+        If the button has been held more than the configured Hold delay, the corresponding "long" action is triggered.
+      default: 500
+      selector:
+        number:
+          min: 100.0
+          max: 1000.0
+          unit_of_measurement: milliseconds
+          mode: box
+          step: 10.0
+    # inputs for custom actions
+    action_button_top_left_short:
+      name: (Optional) Top Left button press
+      description: Action to run on short on button top left press.
+      default: []
+      selector:
+        action: {}
+    action_button_top_left_long:
+      name: (Optional) Top Left long press
+      description: Action to run on long on button top left press.
+      default: []
+      selector:
+        action: {}
+    action_button_top_left_release:
+      name: (Optional) Top Left release
+      description: Action to run on on button top left release after long press.
+      default: []
+      selector:
+        action: {}
+    action_button_top_right_short:
+      name: (Optional) Top Right button short press
+      description: Action to run on short top right button press.
+      default: []
+      selector:
+        action: {}
+    action_button_top_right_long:
+      name: (Optional) Top Right button long press
+      description: Action to run on long top right button press.
+      default: []
+      selector:
+        action: {}
+    action_button_top_right_release:
+      name: (Optional) Top Right button release
+      description: Action to run on top right button release after long press.
+      default: []
+      selector:
+        action: {}
+    action_button_bottom_left_short:
+      name: (Optional) Bottom Left button short press
+      description: Action to run on short bottom left button press.
+      default: []
+      selector:
+        action: {}
+    action_button_bottom_left_long:
+      name: (Optional) Bottom Left button long press
+      description: Action to run on long bottom left button press.
+      default: []
+      selector:
+        action: {}
+    action_button_bottom_left_release:
+      name: (Optional) Bottom Left button release
+      description: Action to run on bottom left button release after long press.
+      default: []
+      selector:
+        action: {}
+    action_button_bottom_right_short:
+      name: (Optional) Bottom Right button short press
+      description: Action to run on short bottom right button press.
+      default: []
+      selector:
+        action: {}
+    action_button_bottom_right_long:
+      name: (Optional) Bottom Right button long press
+      description: Action to run on long bottom right button press.
+      default: []
+      selector:
+        action: {}
+    action_button_bottom_right_release:
+      name: (Optional) Bottom Right button release
+      description: Action to run on bottom right button release after long press.
+      default: []
+      selector:
+        action: {}
+    button_top_left_long_loop:
+      name: (Optional) Top Left button long press - loop until release
+      description: Loop the Top Left button action until the button is released.
+      default: false
+      selector:
+        boolean: {}
+    button_top_left_long_max_loop_repeats:
+      name: (Optional) Top Left button long press - Maximum loop repeats
+      description: |
+        Maximum number of repeats for the custom action, when looping is enabled.
+        Use it as a safety limit to prevent an endless loop in case the corresponding stop event is not received.
+      default: 500
+      selector:
+        number:
+          min: 1
+          max: 5000
+          mode: slider
+          step: 1
+    button_top_right_long_loop:
+      name: (Optional) Top Right button long press - loop until release
+      description: Loop the Top Right button action until the button is released.
+      default: false
+      selector:
+        boolean:
+    button_top_right_long_max_loop_repeats:
+      name: (Optional) Top Right button long press - Maximum loop repeats
+      description: |
+        Maximum number of repeats for the custom action, when looping is enabled.
+        Use it as a safety limit to prevent an endless loop in case the corresponding stop event is not received.
+      default: 500
+      selector:
+        number:
+          min: 1
+          max: 5000
+          mode: slider
+          step: 1
+    button_bottom_left_long_loop:
+      name: (Optional) Bottom Left button long press - loop until release
+      description: Loop the Bottom Left button action until the button is released.
+      default: false
+      selector:
+        boolean:
+    button_bottom_left_long_max_loop_repeats:
+      name: (Optional) Bottom Left button long press - Maximum loop repeats
+      description: |
+        Maximum number of repeats for the custom action, when looping is enabled.
+        Use it as a safety limit to prevent an endless loop in case the corresponding stop event is not received.
+      default: 500
+      selector:
+        number:
+          min: 1
+          max: 5000
+          mode: slider
+          step: 1
+    button_bottom_right_long_loop:
+      name: (Optional) Bottom Right button long press - loop until release
+      description: Loop the Bottom Right button action until the button is released.
+      default: false
+      selector:
+        boolean:
+    button_bottom_right_long_max_loop_repeats:
+      name: (Optional) Bottom Right button long press - Maximum loop repeats
+      description: |
+        Maximum number of repeats for the custom action, when looping is enabled.
+        Use it as a safety limit to prevent an endless loop in case the corresponding stop event is not received.
+      default: 500
+      selector:
+        number:
+          min: 1
+          max: 5000
+          mode: slider
+          step: 1
+    # helpers used to properly recognize the remote button events
+    helper_debounce_delay:
+      name: (Optional) Helper - Debounce delay
+      description: |
+        Delay used for debouncing RAW controller events, by default set to 0.
+        A value of 0 disables the debouncing feature.
+        Increase this value if you notice custom actions or linked Hooks running multiple times when interacting with the device.
+        When the controller needs to be debounced, usually a value of 100 is enough to remove all duplicate events.
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 1000
+          unit_of_measurement: milliseconds
+          mode: box
+          step: 10
+# Automation schema
+variables:
+  # convert input tags to variables, to be used in templates
+  hold_delay: !input hold_delay
+  button_top_left_long_loop: !input button_top_left_long_loop
+  button_top_left_long_max_loop_repeats: !input button_top_left_long_max_loop_repeats
+  button_top_right_long_loop: !input button_top_right_long_loop
+  button_top_right_long_max_loop_repeats: !input button_top_right_long_max_loop_repeats
+  button_bottom_left_long_loop: !input button_bottom_left_long_loop
+  button_bottom_left_long_max_loop_repeats: !input button_bottom_left_long_max_loop_repeats
+  button_bottom_right_long_loop: !input button_bottom_right_long_loop
+  button_bottom_right_long_max_loop_repeats: !input button_bottom_right_long_max_loop_repeats
+  helper_last_controller_event: !input helper_last_controller_event
+  helper_debounce_delay: !input helper_debounce_delay
+
+  # build data to send within a controller event
+  controller_entity: !input controller_entity
+  controller_id: !input controller_entity
+mode: restart
+max_exceeded: silent
+trigger_variables:
+  base_topic: !input base_topic
+  controller: !input controller
+trigger:
+  - platform: mqtt
+    topic: "{{ base_topic ~ '/' ~ controller }}"
+condition:
+  - condition: and
+    conditions:
+      # check that the button event is not empty
+      - >-
+        {%- set trigger_action -%}
+        {{ trigger.payload_json.action }}
+        {%- endset -%}
+        {{ trigger_action not in ["","None"] }}
+action:
+  # debouncing - when automation is triggered multiple times, the last automation run is the one which completes execution, due to mode restart
+  # therefore previous runs must wait for the debounce delay before executing any other action
+  # if the delay expires and the automation is still running it means it's the last run and execution can continue
+  - delay:
+      milliseconds: !input helper_debounce_delay
+  # extract button event from the trigger
+  # provide a single string value to check against
+  - variables:
+      trigger_action: '{{ trigger.payload_json.action }}'
+      trigger_elapsed: '{{ trigger.payload_json.elapsed }}'
+      # Trigger delta not used for now (Might be needed for double press logic)
+      # trigger_delta: '{{ (as_timestamp(now()) - ((states(helper_last_controller_event) | from_json).t if helper_last_controller_event is not none and (states(helper_last_controller_event) | regex_match("^\{((\"a\":\s*\".*\"|\"t\":\s*\d+\.\d+)(,\s*)?){2}\}$")) else as_timestamp("1970-01-01 00:00:00"))) * 1000 }}'
+  # update helper
+  - service: input_text.set_value
+    data:
+      entity_id: !input helper_last_controller_event
+      value: '{{ {"a":trigger_action,"t":as_timestamp(now())} | to_json }}'
+  # choose the sequence to run based on the received button event
+  - choose:
+      # Short button press group
+      - conditions: '{{ "release_" in trigger_action and trigger_elapsed | int < hold_delay }}'
+        sequence:
+          - choose:
+              - conditions: '{{ trigger_action == "release_1" }}'
+                sequence:
+                  # fire the event
+                  - event: ahb_controller_event
+                    event_data:
+                      controller: '{{ controller_id }}'
+                      action: button_top_left_short
+                  # run the custom action
+                  - choose:
+                      - conditions: []
+                        sequence: !input action_button_top_left_short
+              - conditions: '{{ trigger_action == "release_2" }}'
+                sequence:
+                  # fire the event
+                  - event: ahb_controller_event
+                    event_data:
+                      controller: '{{ controller_id }}'
+                      action: button_bottom_left_short
+                  # run the custom action
+                  - choose:
+                      - conditions: []
+                        sequence: !input action_button_bottom_left_short
+              - conditions: '{{ trigger_action == "release_3" }}'
+                sequence:
+                  # fire the event
+                  - event: ahb_controller_event
+                    event_data:
+                      controller: '{{ controller_id }}'
+                      action: button_top_right_short
+                  # run the custom action
+                  - choose:
+                      - conditions: []
+                        sequence: !input action_button_top_right_short
+              - conditions: '{{ trigger_action == "release_4" }}'
+                sequence:
+                  # fire the event
+                  - event: ahb_controller_event
+                    event_data:
+                      controller: '{{ controller_id }}'
+                      action: button_bottom_right_short
+                  # run the custom action
+                  - choose:
+                      - conditions: []
+                        sequence: !input action_button_bottom_right_short
+      # Long button press group
+      - conditions: '{{ "press_" | string in trigger_action }}'
+        sequence:
+          - delay:
+              milliseconds: !input hold_delay
+          - choose:
+              - conditions: '{{ trigger_action == "press_1" }}'
+                sequence:
+                  # fire the event only once before looping the action
+                  - event: ahb_controller_event
+                    event_data:
+                      controller: '{{ controller_id }}'
+                      action: button_top_left_long
+                  - choose:
+                      # if looping is enabled, loop the action for a finite number of iterations
+                      - conditions: '{{ button_top_left_long_loop }}'
+                        sequence:
+                          - repeat:
+                              while: '{{ repeat.index < button_top_left_long_max_loop_repeats | int }}'
+                              sequence: !input action_button_top_left_long
+                    # if looping is not enabled run the custom action only once
+                    default: !input action_button_top_left_long
+              - conditions: '{{ trigger_action == "press_2" }}'
+                sequence:
+                  # fire the event only once before looping the action
+                  - event: ahb_controller_event
+                    event_data:
+                      controller: '{{ controller_id }}'
+                      action: button_bottom_left_long
+                  - choose:
+                      # if looping is enabled, loop the action for a finite number of iterations
+                      - conditions: '{{ button_bottom_left_long_loop }}'
+                        sequence:
+                          - repeat:
+                              while: '{{ repeat.index < button_bottom_left_long_max_loop_repeats | int }}'
+                              sequence: !input action_button_bottom_left_long
+                    # if looping is not enabled run the custom action only once
+                    default: !input action_button_bottom_left_long
+              - conditions: '{{ trigger_action == "press_3" }}'
+                sequence:
+                  # fire the event only once before looping the action
+                  - event: ahb_controller_event
+                    event_data:
+                      controller: '{{ controller_id }}'
+                      action: button_top_right_long
+                  - choose:
+                      # if looping is enabled, loop the action for a finite number of iterations
+                      - conditions: '{{ button_top_right_long_loop }}'
+                        sequence:
+                          - repeat:
+                              while: '{{ repeat.index < button_top_right_long_max_loop_repeats | int }}'
+                              sequence: !input action_button_top_right_long
+                    # if looping is not enabled run the custom action only once
+                    default: !input action_button_top_right_long
+              - conditions: '{{ trigger_action == "press_4" }}'
+                sequence:
+                  # fire the event only once before looping the action
+                  - event: ahb_controller_event
+                    event_data:
+                      controller: '{{ controller_id }}'
+                      action: button_bottom_right_long
+                  - choose:
+                      # if looping is enabled, loop the action for a finite number of iterations
+                      - conditions: '{{ button_bottom_right_long_loop }}'
+                        sequence:
+                          - repeat:
+                              while: '{{ repeat.index < button_bottom_right_long_max_loop_repeats | int }}'
+                              sequence: !input action_button_bottom_right_long
+                    # if looping is not enabled run the custom action only once
+                    default: !input action_button_bottom_right_long
+      # Release button press group
+      - conditions: '{{ "release_" in trigger_action and trigger_elapsed | int > hold_delay }}'
+        sequence:
+          - choose:
+              - conditions: '{{ trigger_action == "release_1" }}'
+                sequence:
+                  # fire the event
+                  - event: ahb_controller_event
+                    event_data:
+                      controller: '{{ controller_id }}'
+                      action: button_top_left_release
+                  # run the custom action
+                  - choose:
+                      - conditions: []
+                        sequence: !input action_button_top_left_release
+              - conditions: '{{ trigger_action == "release_2" }}'
+                sequence:
+                  # fire the event
+                  - event: ahb_controller_event
+                    event_data:
+                      controller: '{{ controller_id }}'
+                      action: button_bottom_left_release
+                  # run the custom action
+                  - choose:
+                      - conditions: []
+                        sequence: !input action_button_bottom_left_release
+              - conditions: '{{ trigger_action == "release_3" }}'
+                sequence:
+                  # fire the event
+                  - event: ahb_controller_event
+                    event_data:
+                      controller: '{{ controller_id }}'
+                      action: button_top_right_release
+                  # run the custom action
+                  - choose:
+                      - conditions: []
+                        sequence: !input action_button_top_right_release
+              - conditions: '{{ trigger_action == "release_4" }}'
+                sequence:
+                  # fire the event
+                  - event: ahb_controller_event
+                    event_data:
+                      controller: '{{ controller_id }}'
+                      action: button_bottom_right_release
+                  # run the custom action
+                  - choose:
+                      - conditions: []
+                        sequence: !input action_button_bottom_right_release
