@@ -150,6 +150,27 @@ blueprint:
           step: 1
           unit_of_measurement: brightness
           mode: slider
+    force_color_temperature:
+      name: (Optional) Force Color Temperature at turn on
+      description:
+        Force Color Temperature to the "On Color Temperature" input value, when the light
+        is being turned on.
+      default: false
+      selector:
+        boolean: {}
+    on_color_temperature:
+      name: (Optional) On Color Temperature
+      description:
+        The colour temperature setting for the lights when they are turned
+        ON.
+      default: 2700
+      selector:
+        number:
+          min: 2000.0
+          max: 8000.0
+          mode: slider
+          step: 100.0
+          unit_of_measurement: kelvin
     smooth_power_on:
       name: (Optional) Smooth power on
       description: Force the light to turn on at minimum brightness when a brightness up command (single or continuous) is triggered and light is off.
@@ -332,6 +353,8 @@ variables:
   brightness_steps_long: !input brightness_steps_long
   force_brightness: !input force_brightness
   on_brightness: !input on_brightness
+  force_color_temperature: !input force_color_temperature
+  on_color_temperature: !input on_color_temperature
   smooth_power_on: !input smooth_power_on
   smooth_power_off: !input smooth_power_off
   color_modes:
@@ -364,33 +387,87 @@ action:
       - conditions: '{{ action == toggle }}'
         sequence:
           - choose:
-              - conditions: '{{ force_brightness }}'
+              - alias: Set the brightness and transition for light.toggle
+                conditions: '{{ force_brightness and not force_color_temperature }}'
                 sequence:
                   - service: light.toggle
-                    entity_id: !input light
+                    target:
+                      entity_id: !input light
                     data:
                       brightness: !input on_brightness
                       transition: '{{ light_transition / 1000 }}'
-            default:
-              - service: light.toggle
-                entity_id: !input light
-                data:
-                  transition: '{{ light_transition / 1000 }}'
+          - choose:
+              - alias: Set the brightness and transition for light.toggle
+                conditions: '{{ force_brightness and force_color_temperature }}'
+                sequence:
+                  - service: light.toggle
+                    target:
+                      entity_id: !input light
+                    data:
+                      brightness: !input on_brightness
+                      kelvin: '{{ on_color_temperature }}'
+                      transition: '{{ light_transition / 1000 }}'
+          - choose:
+              - alias: Set the color temperature and transition for light.toggle
+                conditions: '{{ force_color_temperature and not force_brightness }}'
+                sequence:
+                  - service: light.toggle
+                    target:
+                      entity_id: !input light
+                    data:
+                      kelvin: '{{ on_color_temperature }}'
+                      transition: '{{ light_transition / 1000 }}'
+          - choose:
+              - alias: Set the transition for light.toggle - Default
+                conditions: '{{ not force_color_temperature and not force_brightness }}'
+                sequence:
+                  - service: light.toggle
+                    target:
+                      entity_id: !input light
+                    data:
+                      transition: '{{ light_transition / 1000 }}'
       - conditions: '{{ action == turn_on }}'
         sequence:
           - choose:
-              - conditions: '{{ force_brightness }}'
+              - alias: Set the brightness and transition for light.turn_on
+                conditions: '{{ force_brightness and not force_color_temperature }}'
                 sequence:
                   - service: light.turn_on
-                    entity_id: !input light
+                    target:
+                      entity_id: !input light
                     data:
                       brightness: !input on_brightness
                       transition: '{{ light_transition / 1000 }}'
-            default:
-              - service: light.turn_on
-                entity_id: !input light
-                data:
-                  transition: '{{ light_transition / 1000 }}'
+          - choose:
+              - alias: Set the brightness and transition for light.turn_on
+                conditions: '{{ force_brightness and force_color_temperature }}'
+                sequence:
+                  - service: light.turn_on
+                    target:
+                      entity_id: !input light
+                    data:
+                      brightness: !input on_brightness
+                      kelvin: '{{ on_color_temperature }}'
+                      transition: '{{ light_transition / 1000 }}'
+          - choose:
+              - alias: Set the color temperature and transition for light.turn_on
+                conditions: '{{ force_color_temperature and not force_brightness }}'
+                sequence:
+                  - service: light.turn_on
+                    target:
+                      entity_id: !input light
+                    data:
+                      kelvin: '{{ on_color_temperature }}'
+                      transition: '{{ light_transition / 1000 }}'
+          - choose:
+              - alias: Set the transition for light.turn_on - Default
+                conditions: '{{ not force_color_temperature and not force_brightness }}'
+                sequence:
+                  - service: light.turn_on
+                    target:
+                      entity_id: !input light
+                    data:
+                      transition: '{{ light_transition / 1000 }}'
       - conditions: '{{ action == turn_off }}'
         sequence:
           - service: light.turn_off
