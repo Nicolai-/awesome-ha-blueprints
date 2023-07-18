@@ -144,14 +144,14 @@ blueprint:
         boolean:
     on_brightness:
       name: (Optional) On brightness
-      description: Brightness value to force when turning on the light
+      description: Brightness % to force when turning on the light
       default: 1
       selector:
         number:
-          min: 0
-          max: 255
+          min: 1
+          max: 100
           step: 1
-          unit_of_measurement: brightness
+          unit_of_measurement: '%'
           mode: slider
     force_color_temperature:
       name: (Optional) Force Color Temperature at turn on
@@ -420,7 +420,7 @@ action:
                     target:
                       entity_id: !input light
                     data:
-                      brightness: !input on_brightness
+                      brightness_pct: '{{ on_brightness }}'
                       transition: '{{ light_transition / 1000 }}'
           - choose:
               - alias: Set the brightness and transition for light.toggle
@@ -430,7 +430,7 @@ action:
                     target:
                       entity_id: !input light
                     data:
-                      brightness: !input on_brightness
+                      brightness_pct: '{{ on_brightness }}'
                       kelvin: '{{ on_color_temperature }}'
                       transition: '{{ light_transition / 1000 }}'
           - choose:
@@ -462,7 +462,7 @@ action:
                     target:
                       entity_id: !input light
                     data:
-                      brightness: !input on_brightness
+                      brightness_pct: '{{ on_brightness }}'
                       transition: '{{ light_transition / 1000 }}'
           - choose:
               - alias: Set the brightness and transition for light.turn_on
@@ -472,7 +472,7 @@ action:
                     target:
                       entity_id: !input light
                     data:
-                      brightness: !input on_brightness
+                      brightness_pct: '{{ on_brightness }}'
                       kelvin: '{{ on_color_temperature }}'
                       transition: '{{ light_transition / 1000 }}'
           - choose:
