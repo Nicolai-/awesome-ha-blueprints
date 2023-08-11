@@ -166,7 +166,7 @@ blueprint:
       description:
         The colour temperature setting for the lights when they are turned
         ON.
-      default: 2700
+      default: 2200
       selector:
         number:
           min: 2000.0
