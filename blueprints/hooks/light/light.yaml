@@ -186,6 +186,18 @@ blueprint:
       default: false
       selector:
         boolean:
+    max_loop_repeats:
+      name: Maximum loop repeats
+      description: |
+        Maximum number of repeats for "repeat" actions
+        Use it as a safety limit to prevent an endless loop in case the corresponding stop event is not received.
+      default: 100
+      selector:
+        number:
+          min: 1
+          max: 5000
+          mode: slider
+          step: 1
 # Automation schema
 variables:
   # convert blueprint inputs into variables to be used in templates
@@ -383,6 +395,7 @@ variables:
   on_color_temperature: !input on_color_temperature
   smooth_power_on: !input smooth_power_on
   smooth_power_off: !input smooth_power_off
+  max_loop_repeats: !input max_loop_repeats
   color_modes:
     Auto: auto
     Color Temperature: color_temp
@@ -577,9 +590,9 @@ action:
                   - delay:
                       milliseconds: !input light_transition
           # else move on to the loop for increasing the light brightness
-          - alias: increase brightness loop
+          - alias: loop increasing brightness until max brightness
             repeat:
-              while: '{{ true }}'
+              while: '{{ state_attr(light,"brightness") < max_brightness }}'
               sequence:
                 - service: light.turn_on
                   data:
@@ -624,9 +637,9 @@ action:
                             - delay:
                                 milliseconds: 250
             default:
-              - alias: continue lowering brightness until the light turns off
+              - alias: loop decreasing brightness until min brightness
                 repeat:
-                  while: '{{ states(light) != "off" }}'
+                  while: '{{ state_attr(light,"brightness") > min_brightness }}'
                   sequence:
                     # lower the light's brightness. since smooth power off is disabled, never let the brightness move below the user-provided minimum
                     - service: light.turn_on
@@ -684,7 +697,7 @@ action:
               conditions: '{{ light_color_mode_id == "color_temp" }}'
               sequence:
                 - repeat:
-                    while: '{{ true }}'
+                    while: '{{ repeat.index < max_loop_repeats| int }}'
                     sequence:
                       - service: light.turn_on
                         data:
@@ -697,7 +710,7 @@ action:
               conditions: '{{ light_color_mode_id == "hs_color" }}'
               sequence:
                 - repeat:
-                    while: '{{ true }}'
+                    while: '{{ repeat.index < max_loop_repeats| int }}'
                     sequence:
                       - service: light.turn_on
                         data:
@@ -714,7 +727,7 @@ action:
               conditions: '{{ light_color_mode_id == "color_temp" }}'
               sequence:
                 - repeat:
-                    while: '{{ true }}'
+                    while: '{{ repeat.index < max_loop_repeats| int }}'
                     sequence:
                       - service: light.turn_on
                         data:
@@ -727,7 +740,7 @@ action:
               conditions: '{{ light_color_mode_id == "hs_color" }}'
               sequence:
                 - repeat:
-                    while: '{{ true }}'
+                    while: '{{ repeat.index < max_loop_repeats| int }}'
                     sequence:
                       - service: light.turn_on
                         data:
