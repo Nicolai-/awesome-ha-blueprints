@@ -23,7 +23,7 @@ blueprint:
     controller:
       name: (Required) Zigbee2MQTT Controller Name
       description: The name of the controller as defined in Zigbee2MQTT (e.g. Livingroom Switch)
-      default: ''
+      default: ""
     base_topic:
       name: (Required) Zigbee2MQTT Base mqtt topic
       description: The base topic as configured in Zigbee2MQTT
@@ -31,17 +31,19 @@ blueprint:
     controller_entity:
       name: (Required) Zigbee2MQTT Controller Entity
       description: The action sensor of the controller to use for the automation.
-      default: ''
+      default: ""
       selector:
         entity:
-          domain: sensor
+          filter:
+            domain: sensor
     helper_last_controller_event:
       name: (Required) Helper - Last Controller Event
       description: Input Text used to store the last event fired by the controller. You will need to manually create a text input entity for this, please read the blueprint Additional Notes for more info.
-      default: ''
+      default: ""
       selector:
         entity:
-          domain: input_text
+          filter:
+            domain: input_text
     hold_delay:
       name: Hold delay (Required for FOH)
       description: |
@@ -239,8 +241,8 @@ max_exceeded: silent
 trigger_variables:
   base_topic: !input base_topic
   controller: !input controller
-trigger:
-  - platform: mqtt
+triggers:
+  - trigger: mqtt
     topic: "{{ base_topic ~ '/' ~ controller }}"
 condition:
   - condition: and
@@ -260,12 +262,12 @@ action:
   # extract button event from the trigger
   # provide a single string value to check against
   - variables:
-      trigger_action: '{{ trigger.payload_json.action }}'
-      trigger_elapsed: '{{ trigger.payload_json.elapsed }}'
+      trigger_action: "{{ trigger.payload_json.action }}"
+      trigger_elapsed: "{{ trigger.payload_json.elapsed }}"
       # Trigger delta not used for now (Might be needed for double press logic)
       # trigger_delta: '{{ (as_timestamp(now()) - ((states(helper_last_controller_event) | from_json).t if helper_last_controller_event is not none and (states(helper_last_controller_event) | regex_match("^\{((\"a\":\s*\".*\"|\"t\":\s*\d+\.\d+)(,\s*)?){2}\}$")) else as_timestamp("1970-01-01 00:00:00"))) * 1000 }}'
   # update helper
-  - service: input_text.set_value
+  - action: input_text.set_value
     data:
       entity_id: !input helper_last_controller_event
       value: '{{ {"a":trigger_action,"t":as_timestamp(now())} | to_json }}'
@@ -280,7 +282,7 @@ action:
                   # fire the event
                   - event: ahb_controller_event
                     event_data:
-                      controller: '{{ controller_id }}'
+                      controller: "{{ controller_id }}"
                       action: button_top_left_short
                   # run the custom action
                   - choose:
@@ -291,7 +293,7 @@ action:
                   # fire the event
                   - event: ahb_controller_event
                     event_data:
-                      controller: '{{ controller_id }}'
+                      controller: "{{ controller_id }}"
                       action: button_bottom_left_short
                   # run the custom action
                   - choose:
@@ -302,7 +304,7 @@ action:
                   # fire the event
                   - event: ahb_controller_event
                     event_data:
-                      controller: '{{ controller_id }}'
+                      controller: "{{ controller_id }}"
                       action: button_top_right_short
                   # run the custom action
                   - choose:
@@ -313,7 +315,7 @@ action:
                   # fire the event
                   - event: ahb_controller_event
                     event_data:
-                      controller: '{{ controller_id }}'
+                      controller: "{{ controller_id }}"
                       action: button_bottom_right_short
                   # run the custom action
                   - choose:
@@ -330,14 +332,14 @@ action:
                   # fire the event only once before looping the action
                   - event: ahb_controller_event
                     event_data:
-                      controller: '{{ controller_id }}'
+                      controller: "{{ controller_id }}"
                       action: button_top_left_long
                   - choose:
                       # if looping is enabled, loop the action for a finite number of iterations
-                      - conditions: '{{ button_top_left_long_loop }}'
+                      - conditions: "{{ button_top_left_long_loop }}"
                         sequence:
                           - repeat:
-                              while: '{{ repeat.index < button_top_left_long_max_loop_repeats | int }}'
+                              while: "{{ repeat.index < button_top_left_long_max_loop_repeats | int }}"
                               sequence: !input action_button_top_left_long
                     # if looping is not enabled run the custom action only once
                     default: !input action_button_top_left_long
@@ -346,14 +348,14 @@ action:
                   # fire the event only once before looping the action
                   - event: ahb_controller_event
                     event_data:
-                      controller: '{{ controller_id }}'
+                      controller: "{{ controller_id }}"
                       action: button_bottom_left_long
                   - choose:
                       # if looping is enabled, loop the action for a finite number of iterations
-                      - conditions: '{{ button_bottom_left_long_loop }}'
+                      - conditions: "{{ button_bottom_left_long_loop }}"
                         sequence:
                           - repeat:
-                              while: '{{ repeat.index < button_bottom_left_long_max_loop_repeats | int }}'
+                              while: "{{ repeat.index < button_bottom_left_long_max_loop_repeats | int }}"
                               sequence: !input action_button_bottom_left_long
                     # if looping is not enabled run the custom action only once
                     default: !input action_button_bottom_left_long
@@ -362,14 +364,14 @@ action:
                   # fire the event only once before looping the action
                   - event: ahb_controller_event
                     event_data:
-                      controller: '{{ controller_id }}'
+                      controller: "{{ controller_id }}"
                       action: button_top_right_long
                   - choose:
                       # if looping is enabled, loop the action for a finite number of iterations
-                      - conditions: '{{ button_top_right_long_loop }}'
+                      - conditions: "{{ button_top_right_long_loop }}"
                         sequence:
                           - repeat:
-                              while: '{{ repeat.index < button_top_right_long_max_loop_repeats | int }}'
+                              while: "{{ repeat.index < button_top_right_long_max_loop_repeats | int }}"
                               sequence: !input action_button_top_right_long
                     # if looping is not enabled run the custom action only once
                     default: !input action_button_top_right_long
@@ -378,14 +380,14 @@ action:
                   # fire the event only once before looping the action
                   - event: ahb_controller_event
                     event_data:
-                      controller: '{{ controller_id }}'
+                      controller: "{{ controller_id }}"
                       action: button_bottom_right_long
                   - choose:
                       # if looping is enabled, loop the action for a finite number of iterations
-                      - conditions: '{{ button_bottom_right_long_loop }}'
+                      - conditions: "{{ button_bottom_right_long_loop }}"
                         sequence:
                           - repeat:
-                              while: '{{ repeat.index < button_bottom_right_long_max_loop_repeats | int }}'
+                              while: "{{ repeat.index < button_bottom_right_long_max_loop_repeats | int }}"
                               sequence: !input action_button_bottom_right_long
                     # if looping is not enabled run the custom action only once
                     default: !input action_button_bottom_right_long
@@ -398,7 +400,7 @@ action:
                   # fire the event
                   - event: ahb_controller_event
                     event_data:
-                      controller: '{{ controller_id }}'
+                      controller: "{{ controller_id }}"
                       action: button_top_left_release
                   # run the custom action
                   - choose:
@@ -409,7 +411,7 @@ action:
                   # fire the event
                   - event: ahb_controller_event
                     event_data:
-                      controller: '{{ controller_id }}'
+                      controller: "{{ controller_id }}"
                       action: button_bottom_left_release
                   # run the custom action
                   - choose:
@@ -420,7 +422,7 @@ action:
                   # fire the event
                   - event: ahb_controller_event
                     event_data:
-                      controller: '{{ controller_id }}'
+                      controller: "{{ controller_id }}"
                       action: button_top_right_release
                   # run the custom action
                   - choose:
@@ -431,7 +433,7 @@ action:
                   # fire the event
                   - event: ahb_controller_event
                     event_data:
-                      controller: '{{ controller_id }}'
+                      controller: "{{ controller_id }}"
                       action: button_bottom_right_release
                   # run the custom action
                   - choose:
