@@ -16,26 +16,39 @@ blueprint:
 
     🚀 This blueprint is part of the **[Awesome HA Blueprints](https://epmatt.github.io/awesome-ha-blueprints) project**.
 
-    ℹ️ Version 2023.07.18
+    ℹ️ Version 2024.12.17
   source_url: https://github.com/Nicolai-/awesome-ha-blueprints/blob/main/blueprints/controllers/en_ocean_ptm_215z_foh/en_ocean_ptm_215z_foh.yaml
   domain: automation
   input:
+    integration:
+      name: (Required) Integration
+      description: |
+        Integration used for connecting the remote with Home Assistant. Select one of the available values.
+        NOTE: Zigbee2MQTT Event is Experimental
+      default: "Zigbee2MQTT Event"
+      selector:
+        select:
+          options:
+            - Zigbee2MQTT Topic
+            - Zigbee2MQTT Event
     controller:
-      name: (Required) Zigbee2MQTT Controller Name
+      name: (Required) Legacy Zigbee2MQTT Controller Name
       description: The name of the controller as defined in Zigbee2MQTT (e.g. Livingroom Switch)
       default: ""
     base_topic:
-      name: (Required) Zigbee2MQTT Base mqtt topic
+      name: (Required) Legacy Zigbee2MQTT Base mqtt topic
       description: The base topic as configured in Zigbee2MQTT
       default: zigbee2mqtt
     controller_entity:
-      name: (Required) Zigbee2MQTT Controller Entity
-      description: The action sensor of the controller to use for the automation.
-      default: ""
+      name: (Zigbee2MQTT) Controller/Event Entity
+      description: The action sensor/event of the controller to use for the automation. Choose a value only if the remote is integrated with Zigbee2MQTT.
+      default: ''
       selector:
         entity:
-          filter:
-            domain: sensor
+          integration: mqtt
+          domain:
+            - sensor
+            - event
     helper_last_controller_event:
       name: (Required) Helper - Last Controller Event
       description: Input Text used to store the last event fired by the controller. You will need to manually create a text input entity for this, please read the blueprint Additional Notes for more info.
@@ -221,6 +234,7 @@ blueprint:
 # Automation schema
 variables:
   # convert input tags to variables, to be used in templates
+  integration: !input integration
   hold_delay: !input hold_delay
   button_top_left_long_loop: !input button_top_left_long_loop
   button_top_left_long_max_loop_repeats: !input button_top_left_long_max_loop_repeats
@@ -232,25 +246,42 @@ variables:
   button_bottom_right_long_max_loop_repeats: !input button_bottom_right_long_max_loop_repeats
   helper_last_controller_event: !input helper_last_controller_event
   helper_debounce_delay: !input helper_debounce_delay
+  # integration id used to select items in the action mapping
+  integration_id: "{{ integration | lower | replace(' ','_') }}"
 
   # build data to send within a controller event
   controller_entity: !input controller_entity
-  controller_id: !input controller_entity
+  controller_id: '{% if integration_id == "zigbee2mqtt_topic" %}
+  {{controller_entity}}
+  {% elif integration_id == "zigbee2mqtt_event" %}
+  {{ device_id(controller_entity) }}
+  {% endif %}'
+
 mode: restart
 max_exceeded: silent
 trigger_variables:
   base_topic: !input base_topic
   controller: !input controller
 triggers:
+  # trigger for zigbee2mqtt topic
   - trigger: mqtt
     topic: "{{ base_topic ~ '/' ~ controller }}"
+  # trigger for zigbee2mqtt event experimental
+  - trigger: event
+    event_type: state_changed
+    event_data:
+      entity_id: !input controller_entity
 condition:
   - condition: and
     conditions:
       # check that the button event is not empty
       - >-
         {%- set trigger_action -%}
+        {%- if integration_id == "zigbee2mqtt_topic" -%}
         {{ trigger.payload_json.action }}
+        {%- elif integration_id == "zigbee2mqtt_event" -%}
+        {{ trigger.event.data.new_state.attributes.event_type }}
+        {%- endif -%}
         {%- endset -%}
         {{ trigger_action not in ["","None"] }}
 action:
@@ -262,8 +293,21 @@ action:
   # extract button event from the trigger
   # provide a single string value to check against
   - variables:
-      trigger_action: "{{ trigger.payload_json.action }}"
-      trigger_elapsed: "{{ trigger.payload_json.elapsed }}"
+      trigger_action: >-
+        {%- if integration_id == "zigbee2mqtt_topic" -%}
+        {{ trigger.payload_json.action }}
+        {%- elif integration_id == "zigbee2mqtt_event" -%}
+        {{ trigger.event.data.new_state.attributes.event_type }}
+        {%- endif -%}
+      trigger_elapsed: >-
+        {%- if integration_id == "zigbee2mqtt_topic" -%}
+        {{ trigger.payload_json.elapsed }}
+        {%- elif integration_id == "zigbee2mqtt_event" -%}
+          {%- set new_state_time = trigger.event.data.new_state.state | as_timestamp %}
+          {%- set old_state_time = trigger.event.data.old_state.state | as_timestamp %}
+          {%- set difference_ms = (new_state_time - old_state_time) * 1000 %}
+          {{ difference_ms }}
+        {%- endif -%}
       # Trigger delta not used for now (Might be needed for double press logic)
       # trigger_delta: '{{ (as_timestamp(now()) - ((states(helper_last_controller_event) | from_json).t if helper_last_controller_event is not none and (states(helper_last_controller_event) | regex_match("^\{((\"a\":\s*\".*\"|\"t\":\s*\d+\.\d+)(,\s*)?){2}\}$")) else as_timestamp("1970-01-01 00:00:00"))) * 1000 }}'
   # update helper
