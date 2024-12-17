@@ -5,7 +5,7 @@ blueprint:
     # Controller - Philips 324131092621 Hue Dimmer switch (Nicolai-)
 
     Controller automation for executing any kind of action triggered by the provided Philips 324131092621 Hue Dimmer switch. Allows to optionally loop an action on a button long press.
-    Supports deCONZ, ZHA, Zigbee2MQTT.
+    Supports deCONZ, ZHA, Zigbee2MQTT, Zigbee2MQTT Event (Experimental)
 
     Automations created with this blueprint can be connected with one or more [Hooks](https://epmatt.github.io/awesome-ha-blueprints/docs/blueprints/hooks) supported by this controller.
     Hooks allow to easily create controller-based automations for interacting with media players, lights, covers and more.
@@ -15,19 +15,22 @@ blueprint:
 
     🚀 This blueprint is part of the **[Awesome HA Blueprints](https://epmatt.github.io/awesome-ha-blueprints) project**.
 
-    ℹ️ Version 2023.07.18
+    ℹ️ Version 2024.12.17
   source_url: https://github.com/Nicolai-/awesome-ha-blueprints/blob/main/blueprints/controllers/philips_324131092621/philips_324131092621.yaml
   domain: automation
   input:
     integration:
       name: (Required) Integration
-      description: Integration used for connecting the remote with Home Assistant. Select one of the available values.
+      description: |
+        Integration used for connecting the remote with Home Assistant. Select one of the available values.
+        NOTE: Zigbee2MQTT Event is Experimental
       selector:
         select:
           options:
             - deCONZ
             - ZHA
             - Zigbee2MQTT
+            - Zigbee2MQTT Event
     controller_device:
       name: (deCONZ, ZHA) Controller Device
       description: The controller device to use for the automation. Choose a value only if the remote is integrated with deCONZ, ZHA.
@@ -37,13 +40,15 @@ blueprint:
           filter:
             manufacturer: Philips
     controller_entity:
-      name: (Zigbee2MQTT) Controller Entity
-      description: The action sensor of the controller to use for the automation. Choose a value only if the remote is integrated with Zigbee2MQTT.
-      default: ""
+      name: (Zigbee2MQTT) Controller/Event Entity
+      description: The action sensor/event of the controller to use for the automation. Choose a value only if the remote is integrated with Zigbee2MQTT.
+      default: ''
       selector:
         entity:
-          filter:
-            domain: sensor
+          integration: mqtt
+          domain:
+            - sensor
+            - event
     helper_last_controller_event:
       name: (Required) Helper - Last Controller Event
       description: Input Text used to store the last event fired by the controller. You will need to manually create a text input entity for this, please read the blueprint Additional Notes for more info.
@@ -292,7 +297,7 @@ variables:
   helper_double_press_delay: !input helper_double_press_delay
   helper_debounce_delay: !input helper_debounce_delay
   # integration id used to select items in the action mapping
-  integration_id: "{{ integration | lower }}"
+  integration_id: "{{ integration | lower | replace(' ','_') }}"
   # adjusted debounce delay so that the resulting double press delay is exactly as specified by the user when running the action, taking also account of debouncing
   # make sure it never goes below the minimum double press delay
   adjusted_double_press_delay: "{{ [helper_double_press_delay - helper_debounce_delay, 100] | max }}"
@@ -337,6 +342,19 @@ variables:
       button_down_short: [down-press, down_press]
       button_down_long: [down-hold, down_hold]
       button_down_release: [down-hold-release, down_hold_release]
+    zigbee2mqtt_event:
+      button_on_short: [on-press]
+      button_on_long: [on-hold]
+      button_on_release: [on-hold_release]
+      button_off_short: [off-press]
+      button_off_long: [off-hold]
+      button_off_release: [off-hold_release]
+      button_up_short: [up-press]
+      button_up_long: [up-hold]
+      button_up_release: [up-hold_release]
+      button_down_short: [down-press]
+      button_down_long: [down-hold]
+      button_down_release: [down-hold_release]
   # pre-choose actions for buttons based on configured integration
   # no need to perform this task at automation runtime
   button_on_short: '{{ actions_mapping[integration_id]["button_on_short"] }}'
@@ -354,12 +372,18 @@ variables:
   # build data to send within a controller event
   controller_entity: !input controller_entity
   controller_device: !input controller_device
-  controller_id: '{% if integration_id=="zigbee2mqtt" %}{{controller_entity}}{% else %}{{controller_device}}{% endif %}'
+  controller_id: '{% if integration_id == "zigbee2mqtt" %}
+    {{controller_entity}}
+    {% elif integration_id == "zigbee2mqtt_event" %}
+    {{ device_id(controller_entity) }}
+    {% else %}
+    {{controller_device}}
+    {% endif %}'
 mode: restart
 max_exceeded: silent
 
 triggers:
-  # trigger for zigbee2mqtt legacy
+  # trigger for zigbee2mqtt
   - trigger: event
     event_type: state_changed
     event_data:
@@ -379,6 +403,8 @@ condition:
         {%- set trigger_action -%}
         {%- if integration_id == "zigbee2mqtt" -%}
         {{ trigger.event.data.new_state.state }}
+        {%- elif integration_id == "zigbee2mqtt_event" -%}
+        {{ trigger.event.data.new_state.attributes.button ~ "-" ~ trigger.event.data.new_state.attributes.event_type }}
         {%- elif integration_id == "deconz" -%}
         {{ trigger.event.data.event }}
         {%- elif integration_id == "zha" -%}
@@ -401,6 +427,8 @@ action:
       trigger_action: >-
         {%- if integration_id == "zigbee2mqtt" -%}
         {{ trigger.event.data.new_state.state }}
+        {%- elif integration_id == "zigbee2mqtt_event" -%}
+        {{ trigger.event.data.new_state.attributes.button ~ "-" ~ trigger.event.data.new_state.attributes.event_type }}
         {%- elif integration_id == "deconz" -%}
         {{ trigger.event.data.event }}
         {%- elif integration_id == "zha" -%}
