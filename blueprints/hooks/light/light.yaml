@@ -556,7 +556,7 @@ actions:
                       entity_id: !input light
                     data:
                       brightness_pct: '{{ on_brightness }}'
-                      kelvin: '{{ on_color_temperature }}'
+                      color_temp_kelvin: '{{ on_color_temperature }}'
                       transition: '{{ light_transition / 1000 }}'
           - choose:
               - alias: Set the color temperature and transition for light.toggle
@@ -566,7 +566,7 @@ actions:
                     target:
                       entity_id: !input light
                     data:
-                      kelvin: '{{ on_color_temperature }}'
+                      color_temp_kelvin: '{{ on_color_temperature }}'
                       transition: '{{ light_transition / 1000 }}'
           - choose:
               - alias: Set the transition for light.toggle - Default
@@ -599,7 +599,7 @@ actions:
                       entity_id: !input light
                     data:
                       brightness_pct: '{{ on_brightness }}'
-                      kelvin: '{{ on_color_temperature }}'
+                      color_temp_kelvin: '{{ on_color_temperature }}'
                       transition: '{{ light_transition / 1000 }}'
           - choose:
               - alias: Set the color temperature and transition for light.turn_on
@@ -609,7 +609,7 @@ actions:
                     target:
                       entity_id: !input light
                     data:
-                      kelvin: '{{ on_color_temperature }}'
+                      color_temp_kelvin: '{{ on_color_temperature }}'
                       transition: '{{ light_transition / 1000 }}'
           - choose:
               - alias: Set the transition for light.turn_on - Default
